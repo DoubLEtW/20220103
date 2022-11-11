@@ -29,7 +29,7 @@ void* thread_copy(void* arg)
 {
 	int i=*(int *)arg;
 	int POS = i* blocksize;
-	printf("Copy Thread 0x%x , i = %d, POS = %d , Blocksize = %d\n",(unsigned int)pthread_self(),i,POS,blocksize);
+//	printf("Copy Thread 0x%x , i = %d, POS = %d , Blocksize = %d\n",(unsigned int)pthread_self(),i,POS,blocksize);
 	char buf[blocksize];
 	bzero(buf,sizeof(buf));
 	snprintf(buf,blocksize+1,"%s",ptr+POS);
@@ -56,12 +56,13 @@ int thread_cur(const char * File)
 
 int thread_create(void)
 {
+	
 	pthread_t tids[THREAD_NO];
 	int i;
 	for(i=0;i<THREAD_NO;i++)
 	{
 		pthread_create(&tids[i],NULL,thread_copy,(void *)&i);
-		usleep(10000);
+		usleep(80000);
 	}
 
 	while(i--)
@@ -71,10 +72,29 @@ int thread_create(void)
 	return 0;
 }
 
+void *thread_progress(void* arg){
+	const char * icon = "|/-\\";
+	char progress[100];
+	bzero(progress,sizeof(progress));
+	double percent = 0;
+	while(1){
+		if(percent > 100)
+		{
+			break;
+		}
+		progress[(int)percent] = '>';
+		printf("[%-100s][%.2f%%]%c\r",progress,percent++,icon[(int)percent % 4]);
+		fflush(stdout);
+		usleep(6000);
+		}
+		printf("\n");	
+}
+
 
 int main()
 {
-	
+	pthread_t tid;
+	pthread_create(&tid,NULL,thread_progress,NULL);
 	int Fsize;
 	Fsize = create_map();
 	blocksize = thread_cur("thread_copy.c");
